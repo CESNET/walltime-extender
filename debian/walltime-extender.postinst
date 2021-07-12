@@ -1,12 +1,12 @@
 #!/bin/bash
 
+pip3 install psycopg2
+
 if [ ! -d /opt/pbs/var/postgresql/walltime-extender ] ; then
     chown postgres:postgres /opt/pbs/var/postgresql/ -R
-    sudo -u postgres /usr/lib/postgresql/11/bin/initdb -D /opt/pbs/var/postgresql/walltime-extender/
+    sudo -u postgres POSTGRESQL_PATH_HERE/initdb -D /opt/pbs/var/postgresql/walltime-extender/
 
-    sudo -u postgres /usr/lib/postgresql/11/bin/pg_ctl -D /opt/pbs/var/postgresql/walltime-extender/ -o "-p 5455" start
+    sudo -u postgres POSTGRESQL_PATH_HERE/pg_ctl -D /opt/pbs/var/postgresql/walltime-extender/ -o "-p 5455" start -w
     sudo -u postgres psql -h localhost -p 5455 -c 'CREATE DATABASE walltime_extender;'
-    sudo -u postgres /usr/lib/postgresql/11/bin/pg_ctl -D /opt/pbs/var/postgresql/walltime-extender/ stop
+    sudo -u postgres POSTGRESQL_PATH_HERE/pg_ctl -D /opt/pbs/var/postgresql/walltime-extender/ stop -w
 fi
-
-#DEBHELPER#

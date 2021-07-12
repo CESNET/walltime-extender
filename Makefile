@@ -1,6 +1,6 @@
 include /etc/pbs.conf
 
-CFLAGS = -Wall -Wno-unused-variable -fPIC -shared -I${PBS_EXEC}/include -I/usr/include/python3.7 -L${PBS_EXEC}/lib
+CFLAGS = -Wall -Wno-unused-variable -fPIC -shared -I${PBS_EXEC}/include -I/usr/include/python3.7 -I/usr/include/python3.6m -L${PBS_EXEC}/lib
 LDLIBS = -lpbs
 CC = gcc
 

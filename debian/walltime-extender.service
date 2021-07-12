@@ -1,10 +1,13 @@
 [Unit]
-Description=walltime-extender_pgsql
+Description=walltime-extender
 
 [Service]
 Type=forking
-ExecStart=sudo -u postgres /usr/lib/postgresql/11/bin/pg_ctl -D /opt/pbs/var/postgresql/walltime-extender/ -o "-p 5455" start
-ExecStop=sudo -u postgres /usr/lib/postgresql/11/bin/pg_ctl -D /opt/pbs/var/postgresql/walltime-extender/ stop
+ExecStart=POSTGRESQL_PATH_HERE/pg_ctl -D /opt/pbs/var/postgresql/walltime-extender/ -o '-p 5455' start -w
+ExecStop=POSTGRESQL_PATH_HERE/pg_ctl -D /opt/pbs/var/postgresql/walltime-extender/ stop -w
+User=postgres
+Group=postgres
+PrivateTmp=true
 
 [Install]
 WantedBy=multi-user.target
