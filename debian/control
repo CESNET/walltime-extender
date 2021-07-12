@@ -1,0 +1,12 @@
+Source: walltime-extender
+Section: unknown
+Priority: optional
+Maintainer: Václav Chlumský <vchlumsky@cesnet.cz>
+Build-Depends: debhelper
+Standards-Version: 3.8.4
+ 
+Package: walltime-extender
+Depends: python3
+Section: utils
+Architecture: all
+Description: Walltime extender

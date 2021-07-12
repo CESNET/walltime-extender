@@ -1,0 +1,28 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_auto_install:
+	mkdir -p $(CURDIR)/debian/walltime-extender/opt/pbs/etc
+	mkdir -p $(CURDIR)/debian/walltime-extender/opt/pbs/bin
+	mkdir -p $(CURDIR)/debian/walltime-extender/opt/pbs/lib/python3-pbs_ifl
+	mkdir -p $(CURDIR)/debian/walltime-extender/etc/remctl/conf.d
+	mkdir -p $(CURDIR)/debian/walltime-extender/opt/pbs/var/postgresql
+	cp $(CURDIR)/walltime-extender.conf $(CURDIR)/debian/walltime-extender/opt/pbs/etc/
+	cp $(CURDIR)/walltime-extender.py $(CURDIR)/debian/walltime-extender/opt/pbs/bin/
+	cp $(CURDIR)/pbs_ifl.py $(CURDIR)/debian/walltime-extender/opt/pbs/lib/python3-pbs_ifl/
+	cp $(CURDIR)/_pbs_ifl.so $(CURDIR)/debian/walltime-extender/opt/pbs/lib/python3-pbs_ifl/
+	cp $(CURDIR)/walltime-extender.remctl $(CURDIR)/debian/walltime-extender/etc/remctl/conf.d/walltime-extender
+	dh_auto_install
+	dh_systemd_enable || true
+	dh_systemd_start || true
+
+override_dh_installdeb:
+	dh_installdeb
+	sed -i '/remctl/d' $(CURDIR)/debian/walltime-extender/DEBIAN/conffiles
+
+clean:
+	dh_testdir
+	dh_testroot
+	dh_clean

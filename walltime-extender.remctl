@@ -1,0 +1,1 @@
+pbs-extend ALL /opt/pbs/bin/walltime-extender.py ANYUSER
