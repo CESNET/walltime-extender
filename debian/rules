@@ -17,6 +17,7 @@ override_dh_auto_install:
 	mkdir -p $(CURDIR)/debian/walltime-extender/opt/pbs/var/postgresql
 	cp $(CURDIR)/walltime-extender.conf $(CURDIR)/debian/walltime-extender/opt/pbs/etc/
 	cp $(CURDIR)/walltime-extender.py $(CURDIR)/debian/walltime-extender/opt/pbs/bin/
+	cp $(CURDIR)/walltime-extender $(CURDIR)/debian/walltime-extender/opt/pbs/bin/
 	cp $(CURDIR)/pbs_ifl.py $(CURDIR)/debian/walltime-extender/opt/pbs/lib/python3-pbs_ifl/
 	cp $(CURDIR)/_pbs_ifl.so $(CURDIR)/debian/walltime-extender/opt/pbs/lib/python3-pbs_ifl/
 	cp $(CURDIR)/walltime-extender.remctl $(CURDIR)/debian/walltime-extender/etc/remctl/conf.d/walltime-extender

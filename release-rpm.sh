@@ -9,6 +9,7 @@ make
 
 cp walltime-extender.spec walltime-extender-$VERSION/
 cp walltime-extender.py walltime-extender-$VERSION/
+cp walltime-extender walltime-extender-$VERSION/
 cp walltime-extender.conf walltime-extender-$VERSION/
 cp walltime-extender.remctl walltime-extender-$VERSION/
 cp debian/walltime-extender.service walltime-extender-$VERSION/

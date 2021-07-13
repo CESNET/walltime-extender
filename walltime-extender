@@ -1,0 +1,5 @@
+#!/bin/bash
+
+export LD_LIBRARY_PATH=/opt/pbs/lib:/usr/lib
+
+/opt/pbs/bin/walltime-extender.py $@

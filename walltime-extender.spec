@@ -3,6 +3,12 @@ Version: 1.0
 Release: 0
 Summary: walltime-extender
 BuildRequires: python3
+Requires: python3
+Requires: python3-pip
+Requires: python3-devel
+Requires: postgresql
+Requires: postgresql-server
+Requires: postgresql-devel
 
 License: Public Domain
 Source0: walltime-extender-%{version}.tar.gz
@@ -20,11 +26,12 @@ walltime-extender
 
 %install
 install -D -m 644 walltime-extender.service %{buildroot}%{_unitdir}/walltime-extender.service
-install -D -m 744 walltime-extender.conf %{buildroot}/opt/pbs/etc/walltime-extender.conf
+install -D -m 644 walltime-extender.conf %{buildroot}/opt/pbs/etc/walltime-extender.conf
 install -D -m 744 walltime-extender.py %{buildroot}/opt/pbs/bin/walltime-extender.py
+install -D -m 744 walltime-extender %{buildroot}/opt/pbs/bin/walltime-extender
 install -D -m 644 _pbs_ifl.so %{buildroot}/opt/pbs/lib/python3-pbs_ifl/_pbs_ifl.so
 install -D -m 644 pbs_ifl.py %{buildroot}/opt/pbs/lib/python3-pbs_ifl/pbs_ifl.py
-install -D -m 744 walltime-extender.remctl %{buildroot}/etc/remctl/conf.d/walltime-extender
+install -D -m 644 walltime-extender.remctl %{buildroot}/etc/remctl/conf.d/walltime-extender
 
 %post
 %systemd_post walltime-extender.service
@@ -45,6 +52,7 @@ fi
 %systemd_postun_with_restart walltime-extender.service
 
 %files
+/opt/pbs/bin/walltime-extender
 /opt/pbs/bin/walltime-extender.py
 /opt/pbs/lib/python3-pbs_ifl/_pbs_ifl.so
 /opt/pbs/lib/python3-pbs_ifl/pbs_ifl.py

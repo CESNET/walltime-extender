@@ -10,7 +10,6 @@ from configparser import ConfigParser
 try:
     import pbs_ifl
 except:
-    os.environ['LD_LIBRARY_PATH'] = "/opt/pbs/lib"
     sys.path.insert(1, "/opt/pbs/lib/python3-pbs_ifl")
     import pbs_ifl
 
