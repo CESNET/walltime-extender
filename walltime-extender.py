@@ -559,6 +559,10 @@ class Walltime_extender(object):
         if self.jobid is None or self.additional_walltime is None:
             return False
 
+        if self.additional_walltime == 0:
+            logMsg(ERROR, "Zero walltime is not allowed.")
+            return False
+
         if self.c is None:
             logMsg(ERROR, "No connection to server.")
             return False
@@ -608,11 +612,15 @@ Your cputime fund will not be affected." % self.jobid)
         self.current_walltime = self.human2sec(
             job_info["Resource_List.walltime"])
 
-        if "exec_vnode" not in job_info.keys():
-            logMsg(ERROR, "Requested job %s misses the exec_vnode."
-                   % self.jobid)
-            return False
-        self.ncpus = self.get_ncpus(job_info["exec_vnode"])
+        if self.affect_fund:
+            if "exec_vnode" not in job_info.keys():
+                logMsg(ERROR, "Requested job %s misses the exec_vnode."
+                       % self.jobid)
+                return False
+            self.ncpus = self.get_ncpus(job_info["exec_vnode"])
+        else:
+            self.ncpus = 1 # doesn't matter
+
         if self.ncpus == 0:
             logMsg(ERROR, "Failed to get ncpus from 'exec_vnode'.")
             return False
