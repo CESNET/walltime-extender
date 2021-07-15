@@ -802,7 +802,7 @@ has been extended{bcolors.ENDC}. New walltime: %s." %
 
 if __name__ == "__main__":
     extender = Walltime_extender(sys.argv)
-    ret = 1
+    ret = 0
     if extender.check_job():
         ret = extender.extend()
         if ret == 0:
