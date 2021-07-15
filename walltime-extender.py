@@ -4,6 +4,7 @@ import re
 import sys
 import os
 import logging
+import json
 from datetime import datetime
 from configparser import ConfigParser
 
@@ -218,6 +219,27 @@ WHERE owner = '%s';" % (self.table_name, owner)
 
         return used_count
 
+    def get_full_list(self):
+        if not self.is_connected():
+            return []
+
+        full_list = []
+
+        sql = "SELECT owner, COUNT(cputime) AS count, \
+SUM (cputime) AS total_cputime FROM %s GROUP BY owner;" % self.table_name
+
+        try:
+            cur = self.conn.cursor()
+            cur.execute(sql)
+            full_list = cur.fetchall()
+            cur.close()
+            self.conn.commit()
+        except:
+            logMsg(ERROR, "Failed to get the list.")
+            full_list = []
+
+        return full_list
+
     def clean_old(self, seconds):
         if not self.is_connected():
             return
@@ -253,11 +275,13 @@ class Walltime_extender(object):
         self.affect_fund = True
         self.db = None
         self.only_info = False
+        self.show_full_list = False
 
         self.clean_secs = 2592000
         self.fund = 10368000
         self.count = 20
         self.admin_re = r'NOTHING'
+        self.list_re = r'.*'
 
         cfg = config(section="general")
 
@@ -274,6 +298,10 @@ class Walltime_extender(object):
             self.admin_re = r'%r' % cfg["admin_re"]
             self.admin_re = self.admin_re[1:-1]
 
+        if "list_re" in cfg.keys():
+            self.list_re = r'%r' % cfg["list_re"]
+            self.list_re = self.list_re[1:-1]
+
         self.cmd_owner = os.getenv("REMOTE_USER")
         if self.cmd_owner is None or len(self.cmd_owner) == 0:
             logMsg(ERROR, "Missing REMOTE_USER environmental variable.")
@@ -287,6 +315,8 @@ class Walltime_extender(object):
 
         if len(argv) == 2 and sys.argv[1] == 'info':
             self.only_info = True
+        elif len(argv) == 2 and sys.argv[1] == 'list':
+            self.show_full_list = True
         elif len(argv) > 2:
             self.jobid = sys.argv[1]
             self.additional_walltime = sys.argv[2]
@@ -294,12 +324,12 @@ class Walltime_extender(object):
             self.print_help()
             return
 
-        if not self.only_info and not self.check_walltime_format():
-            logMsg(ERROR, "Incorrect walltime format.")
-            self.print_help()
-            return
+        if not self.only_info and not self.show_full_list:
+            if not self.check_walltime_format():
+                logMsg(ERROR, "Incorrect walltime format.")
+                self.print_help()
+                return
 
-        if not self.only_info:
             self.connect_server()
 
             self.additional_walltime = self.human2sec(self.additional_walltime)
@@ -322,7 +352,7 @@ class Walltime_extender(object):
         self.additional_walltime = None
         print("Usage:")
         print("remctl <pbs_server> pbs-extend \
-[<jobid> <additional_walltime>]|info")
+[<jobid> <additional_walltime>]|info|list")
         print("")
         print(" - A valid kerberos ticket needs to be issued before running.")
         print(" - Allowed jobid formats: \
@@ -556,6 +586,9 @@ class Walltime_extender(object):
         if self.only_info:
             return False
 
+        if self.show_full_list:
+            return False
+
         if self.jobid is None or self.additional_walltime is None:
             return False
 
@@ -619,7 +652,8 @@ Your cputime fund will not be affected." % self.jobid)
                 return False
             self.ncpus = self.get_ncpus(job_info["exec_vnode"])
         else:
-            self.ncpus = 1 # doesn't matter
+            # doesn't matter
+            self.ncpus = 1
 
         if self.ncpus == 0:
             logMsg(ERROR, "Failed to get ncpus from 'exec_vnode'.")
@@ -691,7 +725,47 @@ has been extended{bcolors.ENDC}. New walltime: %s." %
 
         return ret
 
-    def finish(self):
+    def full_list(self):
+        """
+        Shows list of all users with fund consumption.
+        """
+
+        if self.only_info:
+            return
+
+        if not self.cmd_owner:
+            return
+
+        if self.show_full_list and self.db.is_connected():
+
+            if len(self.list_re) == 0:
+                logMsg(ERROR, "Listing users is disabled.")
+                return
+
+            if not re.match(self.list_re, self.cmd_owner):
+                logMsg(ERROR, "No permission to list users.")
+                return
+
+            full_list = {}
+            full_list["clean_secs"] = self.clean_secs
+            full_list["fund"] = self.fund
+            full_list["count"] = self.count
+            full_list["list"] = {}
+            for item in self.db.get_full_list():
+                full_list["list"][item[0]] = {}
+                full_list["list"][item[0]]["count"] = item[1]
+                full_list["list"][item[0]]["cputime"] = item[2]
+
+            print(json.dumps(full_list, indent=4))
+
+    def info(self):
+        """
+        Show user info
+        """
+
+        if self.show_full_list:
+            return
+
         if self.affect_fund and self.cmd_owner and self.db.is_connected():
             days = int(self.clean_secs / 86400)
             used_count = self.db.get_used_count(self.cmd_owner)
@@ -717,6 +791,11 @@ has been extended{bcolors.ENDC}. New walltime: %s." %
             print("Avail. cputime fund:\t%s" %
                   self.sec2human((self.fund - used_fund)))
 
+    def finish(self):
+        """
+        Disconnect from db and pbs
+        """
+
         self.disconnect_server()
         if self.db:
             self.db.disconnect()
@@ -728,6 +807,9 @@ if __name__ == "__main__":
         ret = extender.extend()
         if ret == 0:
             extender.adjust_fund()
+
+    extender.full_list()
+    extender.info()
 
     extender.finish()
     exit(ret)
