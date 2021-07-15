@@ -1,11 +1,17 @@
+walltime-extender (1.0-2) unstable; urgency=low
+
+  * add list command
+
+ -- Václav Chlumský, CESNET. <vchlumsky@cesnet.cz>  Thu, 15 Jul 2021 11:30:00 +0100
+
 walltime-extender (1.0-1) unstable; urgency=low
 
   * fix zero walltime and exec_vnode error for not running jobs
 
- -- Václav Chlumský, CESNET. <vchlumsky2cesnet.cz>  Wed, 14 Jul 2021 11:30:00 +0100
+ -- Václav Chlumský, CESNET. <vchlumsky@cesnet.cz>  Wed, 14 Jul 2021 11:30:00 +0100
 
 walltime-extender (1.0-0) unstable; urgency=low
 
   * initial version
 
- -- Václav Chlumský, CESNET. <vchlumsky2cesnet.cz>  Mon, 12 Jul 2021 11:30:00 +0100
+ -- Václav Chlumský, CESNET. <vchlumsky@cesnet.cz>  Mon, 12 Jul 2021 11:30:00 +0100
