@@ -240,6 +240,27 @@ SUM (cputime) AS total_cputime FROM %s GROUP BY owner;" % self.table_name
 
         return full_list
 
+    def get_earliest_record_timeout(self, owner, seconds):
+        if not self.is_connected():
+            return None
+
+        earliest_timeout = None
+
+        try:
+            cur = self.conn.cursor()
+            sql = "SELECT MIN(date) + interval '%d second' as earliest \
+FROM %s WHERE owner = '%s';" % (seconds, self.table_name, owner)
+            cur.execute(sql)
+            earliest_timeout = cur.fetchone()[0]
+            cur.close()
+            self.conn.commit()
+        except:
+            logMsg(ERROR, "Failed to get earliest record timeout for %s."
+                   % owner)
+            earliest_timeout = None
+
+        return earliest_timeout
+
     def clean_old(self, seconds):
         if not self.is_connected():
             return
@@ -798,9 +819,13 @@ has been extended{bcolors.ENDC}. New walltime: %s." %
             full_list["count_limit"] = self.count
             full_list["list"] = {}
             for item in self.db.get_full_list():
+                earliest_timeout = self.db.get_earliest_record_timeout(
+                    item[0], self.clean_secs)
                 full_list["list"][item[0]] = {}
                 full_list["list"][item[0]]["count"] = item[1]
                 full_list["list"][item[0]]["cputime"] = item[2]
+                full_list["list"][item[0]]["earliest_timeout"] \
+                    = "%s" % earliest_timeout
 
             print(json.dumps(full_list, indent=4))
 
@@ -819,6 +844,8 @@ has been extended{bcolors.ENDC}. New walltime: %s." %
             days = int(self.clean_secs / 86400)
             used_count = self.db.get_used_count(self.cmd_owner)
             used_fund = self.db.get_used_fund(self.cmd_owner)
+            earliest_timeout = self.db.get_earliest_record_timeout(
+                self.cmd_owner, self.clean_secs)
             print()
             print("%s's info:" % self.cmd_owner)
             print()
@@ -839,6 +866,9 @@ has been extended{bcolors.ENDC}. New walltime: %s." %
 
             print("Avail. cputime fund:\t%s" %
                   self.sec2human((self.fund - used_fund)))
+            print()
+            print("Earliest rec. timeout:\t%s" %
+                  earliest_timeout)
 
     def finish(self):
         """
