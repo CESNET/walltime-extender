@@ -1,3 +1,10 @@
+walltime-extender (1.0-3) unstable; urgency=low
+
+  * respect max walltime on queue for queued jobs
+  * list earliest record timeout
+
+ -- Václav Chlumský, CESNET. <vchlumsky@cesnet.cz>  Fri, 16 Jul 2021 11:30:00 +0100
+
 walltime-extender (1.0-2) unstable; urgency=low
 
   * add list command
