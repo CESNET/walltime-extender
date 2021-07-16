@@ -309,7 +309,7 @@ class Walltime_extender(object):
             return
 
         if len(self.admin_re) > 0 and re.match(self.admin_re, self.cmd_owner):
-            print("You are the admin. Your cputime fund is not affected.")
+            print("You are the admin. Your cputime fund will not be affected.")
             self.admin = True
             self.affect_fund = False
 
@@ -794,8 +794,8 @@ has been extended{bcolors.ENDC}. New walltime: %s." %
 
             full_list = {}
             full_list["clean_secs"] = self.clean_secs
-            full_list["fund"] = self.fund
-            full_list["count"] = self.count
+            full_list["cputime_fund"] = self.fund
+            full_list["count_limit"] = self.count
             full_list["list"] = {}
             for item in self.db.get_full_list():
                 full_list["list"][item[0]] = {}
