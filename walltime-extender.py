@@ -553,6 +553,43 @@ class Walltime_extender(object):
 
         return True
 
+    def check_max_walltime(self, job_info):
+        """
+        Checks the queue max walltime limit
+        """
+
+        if self.c is None:
+            logMsg(ERROR, "No connection to server.")
+            return False
+
+        queue = job_info["queue"]
+
+        if not queue:
+            logMsg(ERROR, "Missing queue on job.")
+            return False
+
+        try:
+            queue_info = pbs_ifl.pbs_statque(self.c, queue, None, None)
+        except:
+            logMsg(ERROR, "Failed to get queue info.")
+            return False
+
+        if len(queue_info) != 1:
+            logMsg(ERROR, "Queue %s not found." % queue)
+            return False
+
+        queue_info = queue_info[0]
+
+        if ("resources_max.walltime" in queue_info.keys()):
+            limit = self.human2sec(queue_info["resources_max.walltime"])
+
+            walltime = self.current_walltime + self.additional_walltime
+
+            if walltime > limit:
+                return False
+
+        return True
+
     def check_moved_job(self, job_info):
         """
         Check moved job is suitable for walltime extension.
@@ -623,7 +660,7 @@ class Walltime_extender(object):
             return False
 
         elif job_info["job_state"] == "Q":
-            logMsg(INFO, "The job %s did not start yet.\
+            logMsg(INFO, "The job %s did not start yet. \
 Your cputime fund will not be affected." % self.jobid)
 
             self.affect_fund = False
@@ -674,6 +711,15 @@ cputime fund{bcolors.ENDC}." % self.cmd_owner)
 
             print("Possible walltime extension for the job %s is %s." %
                   (self.jobid, self.sec2human(avail_walltime)))
+
+            return False
+
+        if not self.affect_fund and \
+           not self.admin and \
+           not self.check_max_walltime(job_info):
+
+            logMsg(INFO, f"Requested walltime {bcolors.FAIL}violates \
+queue limit{bcolors.ENDC}.")
 
             return False
 
@@ -766,7 +812,10 @@ has been extended{bcolors.ENDC}. New walltime: %s." %
         if self.show_full_list:
             return
 
-        if self.affect_fund and self.cmd_owner and self.db.is_connected():
+        if not self.cmd_owner:
+            return
+
+        if self.affect_fund and self.db.is_connected():
             days = int(self.clean_secs / 86400)
             used_count = self.db.get_used_count(self.cmd_owner)
             used_fund = self.db.get_used_fund(self.cmd_owner)
