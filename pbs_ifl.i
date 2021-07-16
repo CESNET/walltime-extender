@@ -15,9 +15,10 @@
     $1 = (char **) malloc((size+1)*sizeof(char *));
     for (i = 0; i < size; i++) {
       PyObject *o = PyList_GetItem($input,i);
-      if (PyString_Check(o))
-        $1[i] = PyString_AsString(PyList_GetItem($input,i));
-      else {
+      if (PyUnicode_Check(o)) {
+        PyObject *tmp_bytes = PyUnicode_AsEncodedString(PyList_GetItem($input,i), "UTF-8", "strict");
+        $1[i] = PyBytes_AS_STRING(tmp_bytes);
+      } else {
         PyErr_SetString(PyExc_TypeError,"list must contain strings");
         free($1);
         return NULL;
@@ -65,10 +66,15 @@
             }
             tmpv = PyDict_GetItem(dict, a);
             if (tmpv != NULL) {
-                char *s = PyString_AsString(tmpv);
-                str = malloc(strlen(attribs->value) + strlen(s) + 4);
-                sprintf(str, "%s,%s", attribs->value, s);
-                v = PyString_FromString(str);
+                PyObject *tmp_bytes = PyUnicode_AsEncodedString(tmpv, "UTF-8", "strict");
+                if (tmp_bytes != NULL) {
+                  char *s = PyBytes_AS_STRING(tmp_bytes);
+                  str = malloc(strlen(attribs->value) + strlen(s) + 4);
+                  sprintf(str, "%s,%s", attribs->value, s);
+                  v = PyString_FromString(str);
+                } else {
+                  v = PyString_FromString(attribs->value);
+                }
             }
             else {
                 v = PyString_FromString(attribs->value);
