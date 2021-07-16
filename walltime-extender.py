@@ -64,6 +64,10 @@ def logMsg(lvl, msg):
     if not logfile:
         return
 
+    msg = msg.replace('\n', ' ')
+    msg = msg.replace('\t', ' ')
+    msg = re.sub(' +', ' ', msg)
+
     # remove text colorization
     ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
     msg = ansi_escape.sub('', msg)
@@ -784,9 +788,21 @@ queue limit{bcolors.ENDC}.")
             logMsg(ERROR, "Failed to alter job. Error code: %d" % ret)
             return ret
 
+        reduction = 0
+        if self.affect_fund:
+            reduction = self.additional_walltime * self.ncpus
+
         logMsg(INFO, f"The walltime of the job %s {bcolors.OKGREEN}\
-has been extended{bcolors.ENDC}. New walltime: %s." %
-               (self.jobid, self.sec2human(self.new_walltime)))
+has been extended{bcolors.ENDC}.\n\
+Additional walltime:\t%s\n\
+New walltime:\t\t%s\n\
+Fund affected:\t\t%s\n\
+Fund reduction:\t\t%s" %
+               (self.jobid,
+                self.sec2human(self.additional_walltime),
+                self.sec2human(self.new_walltime),
+                self.affect_fund,
+                self.sec2human(reduction)))
 
         self.disconnect_server()
 
