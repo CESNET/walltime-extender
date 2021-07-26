@@ -164,6 +164,10 @@ date timestamp);" % table_name
         if not self.is_connected():
             return
 
+        jobid = self.sanitize(jobid)
+        owner = self.sanitize(owner)
+        cputime = self.sanitize(cputime)
+
         sql = "INSERT INTO %s (jobid, owner, cputime, date) \
 VALUES ('%s', '%s', %d, NOW());" % (self.table_name, jobid, owner, cputime)
 
@@ -178,6 +182,8 @@ VALUES ('%s', '%s', %d, NOW());" % (self.table_name, jobid, owner, cputime)
     def get_used_fund(self, owner):
         if not self.is_connected():
             return -1
+
+        owner = self.sanitize(owner)
 
         used_fund = -1
 
@@ -202,6 +208,8 @@ WHERE owner = '%s';" % (self.table_name, owner)
     def get_used_count(self, owner):
         if not self.is_connected():
             return -1
+
+        owner = self.sanitize(owner)
 
         used_count = -1
 
@@ -248,6 +256,9 @@ SUM (cputime) AS total_cputime FROM %s GROUP BY owner;" % self.table_name
         if not self.is_connected():
             return None
 
+        owner = self.sanitize(owner)
+        seconds = self.sanitize(seconds)
+
         earliest_timeout = None
 
         try:
@@ -265,9 +276,27 @@ FROM %s WHERE owner = '%s';" % (seconds, self.table_name, owner)
 
         return earliest_timeout
 
+    def clean_owner(self, owner):
+        if not self.is_connected():
+            return
+
+        owner = self.sanitize(owner)
+
+        try:
+            cur = self.conn.cursor()
+            sql = "DELETE FROM %s WHERE owner = '%s';" \
+                  % (self.table_name, owner)
+            cur.execute(sql)
+            cur.close()
+            self.conn.commit()
+        except:
+            logMsg(ERROR, "Failed to delete %s's records." % owner)
+
     def clean_old(self, seconds):
         if not self.is_connected():
             return
+
+        seconds = self.sanitize(seconds)
 
         try:
             cur = self.conn.cursor()
@@ -279,6 +308,25 @@ FROM %s WHERE owner = '%s';" % (seconds, self.table_name, owner)
         except:
             logMsg(ERROR, "Failed to clean old records.")
 
+    def sanitize(self, to_check):
+        forbidden_chars = [";", "'", '"']
+        safe_str = "__u_n_k_n_o_w_n__"
+
+        if (type(to_check) == int):
+            return to_check
+
+        if (type(to_check) == str):
+            if len(to_check) == 0:
+                to_check = safe_str
+
+            for i in forbidden_chars:
+                if to_check.find(i) != -1:
+                    to_check = safe_str
+
+        else:
+            to_check = safe_str
+
+        return to_check
 
 class Walltime_extender(object):
     """
@@ -301,6 +349,7 @@ class Walltime_extender(object):
         self.db = None
         self.only_info = False
         self.show_full_list = False
+        self.reset_owner = None
 
         self.clean_secs = 2592000
         self.fund = 10368000
@@ -342,6 +391,15 @@ class Walltime_extender(object):
             self.only_info = True
         elif len(argv) == 2 and sys.argv[1] == 'list':
             self.show_full_list = True
+        elif len(argv) == 3 and sys.argv[1] == 'reset':
+            if not self.admin:
+                logMsg(ERROR, "You are not allowed to reset fund.")
+            if (self.admin and len(sys.argv[2]) > 3):
+                self.reset_owner = sys.argv[2]
+                self.affect_fund = True
+            else:
+                self.print_help()
+                return
         elif len(argv) > 2:
             self.jobid = sys.argv[1]
             self.additional_walltime = sys.argv[2]
@@ -349,7 +407,9 @@ class Walltime_extender(object):
             self.print_help()
             return
 
-        if not self.only_info and not self.show_full_list:
+        if not self.only_info and \
+           not self.show_full_list and \
+           not self.reset_owner:
             if not self.check_walltime_format():
                 logMsg(ERROR, "Incorrect walltime format.")
                 self.print_help()
@@ -377,7 +437,7 @@ class Walltime_extender(object):
         self.additional_walltime = None
         print("Usage:")
         print("remctl <pbs_server> pbs-extend \
-[<jobid> <additional_walltime>]|info|list")
+[<jobid> <additional_walltime>]|info|list|[reset <principal>]")
         print("")
         print(" - A valid kerberos ticket needs to be issued before running.")
         print(" - Allowed jobid formats: \
@@ -651,6 +711,9 @@ class Walltime_extender(object):
         if self.show_full_list:
             return False
 
+        if self.reset_owner:
+            return False
+
         if self.jobid is None or self.additional_walltime is None:
             return False
 
@@ -808,10 +871,21 @@ Fund reduction:\t\t%s" %
 
         return ret
 
+    def reset_other_owner(self):
+
+        if not self.reset_owner:
+            return
+
+        self.db.clean_owner(self.reset_owner)
+        return
+
     def full_list(self):
         """
         Shows list of all users with fund consumption.
         """
+
+        if self.reset_owner:
+            return
 
         if self.only_info:
             return
@@ -856,14 +930,18 @@ Fund reduction:\t\t%s" %
         if not self.cmd_owner:
             return
 
+        owner = self.cmd_owner
+        if (self.reset_owner):
+            owner = self.reset_owner
+
         if self.affect_fund and self.db.is_connected():
             days = int(self.clean_secs / 86400)
-            used_count = self.db.get_used_count(self.cmd_owner)
-            used_fund = self.db.get_used_fund(self.cmd_owner)
+            used_count = self.db.get_used_count(owner)
+            used_fund = self.db.get_used_fund(owner)
             earliest_timeout = self.db.get_earliest_record_timeout(
-                self.cmd_owner, self.clean_secs)
+                owner, self.clean_secs)
             print()
-            print("%s's info:" % self.cmd_owner)
+            print("%s's info:" % owner)
             print()
             print("%d-days counter limit:\t%d" %
                   (days, self.count))
@@ -903,6 +981,7 @@ if __name__ == "__main__":
         if ret == 0:
             extender.adjust_fund()
 
+    extender.reset_other_owner()
     extender.full_list()
     extender.info()
 
