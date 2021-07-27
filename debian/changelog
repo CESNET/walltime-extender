@@ -1,3 +1,9 @@
+walltime-extender (1.0-5) unstable; urgency=low
+
+  * add reset possibility for admins
+
+ -- Václav Chlumský, CESNET. <vchlumsky@cesnet.cz>  Tue, 27 Jul 2021 11:30:00 +0100
+
 walltime-extender (1.0-4) unstable; urgency=low
 
   * pbs_ifl: change PyString_AsString to PyBytes_AS_STRING
