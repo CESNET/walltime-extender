@@ -328,6 +328,7 @@ FROM %s WHERE owner = '%s';" % (seconds, self.table_name, owner)
 
         return to_check
 
+
 class Walltime_extender(object):
     """
     PBS walltime extender class
@@ -347,13 +348,16 @@ class Walltime_extender(object):
         self.admin = False
         self.affect_fund = True
         self.db = None
-        self.only_info = False
+
+        self.do_extension = False
+        self.show_info = False
         self.show_full_list = False
         self.reset_owner = None
 
         self.clean_secs = 2592000
         self.fund = 10368000
         self.count = 20
+        self.owner_re = r'^[a-z][a-z0-9_-]{1,14}@[A-Z0-9\._-]+$'
         self.admin_re = r'NOTHING'
         self.list_re = r'.*'
 
@@ -367,6 +371,10 @@ class Walltime_extender(object):
 
         if "count" in cfg.keys():
             self.count = int(cfg["count"])
+
+        if "owner_re" in cfg.keys():
+            self.owner_re = r'%r' % cfg["owner_re"]
+            self.owner_re = self.owner_re[1:-1]
 
         if "admin_re" in cfg.keys():
             self.admin_re = r'%r' % cfg["admin_re"]
@@ -382,19 +390,24 @@ class Walltime_extender(object):
             self.print_help()
             return
 
+        if not re.match(self.owner_re, self.cmd_owner):
+            logMsg(ERROR, "Illegal format of REMOTE_USER.")
+            self.print_help()
+            return
+
         if len(self.admin_re) > 0 and re.match(self.admin_re, self.cmd_owner):
             print("You are the admin. Your cputime fund will not be affected.")
             self.admin = True
             self.affect_fund = False
 
         if len(argv) == 2 and sys.argv[1] == 'info':
-            self.only_info = True
+            self.show_info = True
         elif len(argv) == 2 and sys.argv[1] == 'list':
             self.show_full_list = True
         elif len(argv) == 3 and sys.argv[1] == 'reset':
             if not self.admin:
                 logMsg(ERROR, "You are not allowed to reset fund.")
-            if (self.admin and len(sys.argv[2]) > 3):
+            if (self.admin and len(sys.argv[2]) > 0):
                 self.reset_owner = sys.argv[2]
                 self.affect_fund = True
             else:
@@ -403,13 +416,12 @@ class Walltime_extender(object):
         elif len(argv) > 2:
             self.jobid = sys.argv[1]
             self.additional_walltime = sys.argv[2]
+            self.do_extension = True
         else:
             self.print_help()
             return
 
-        if not self.only_info and \
-           not self.show_full_list and \
-           not self.reset_owner:
+        if self.do_extension:
             if not self.check_walltime_format():
                 logMsg(ERROR, "Incorrect walltime format.")
                 self.print_help()
@@ -705,13 +717,7 @@ class Walltime_extender(object):
         Check job is suitable for walltime extension
         """
 
-        if self.only_info:
-            return False
-
-        if self.show_full_list:
-            return False
-
-        if self.reset_owner:
+        if not self.do_extension:
             return False
 
         if self.jobid is None or self.additional_walltime is None:
@@ -788,6 +794,8 @@ Your cputime fund will not be affected." % self.jobid)
             logMsg(INFO, f"Number of extensions {bcolors.FAIL}exceeds \
 %d{bcolors.ENDC}." % self.count)
 
+            self.show_info = True
+
             return False
 
         if self.affect_fund and not self.check_fund():
@@ -800,6 +808,8 @@ cputime fund{bcolors.ENDC}." % self.cmd_owner)
             print("Possible walltime extension for the job %s is %s." %
                   (self.jobid, self.sec2human(avail_walltime)))
 
+            self.show_info = True
+
             return False
 
         if not self.affect_fund and \
@@ -810,6 +820,8 @@ cputime fund{bcolors.ENDC}." % self.cmd_owner)
 queue limit{bcolors.ENDC}.")
 
             return False
+
+        self.show_info = True
 
         return True
 
@@ -876,19 +888,21 @@ Fund reduction:\t\t%s" %
         if not self.reset_owner:
             return
 
+        if not re.match(self.owner_re, self.reset_owner):
+            logMsg(ERROR, "Illegal format of principal.")
+            self.print_help()
+            return
+
         self.db.clean_owner(self.reset_owner)
+
+        self.show_info = True
+
         return
 
     def full_list(self):
         """
         Shows list of all users with fund consumption.
         """
-
-        if self.reset_owner:
-            return
-
-        if self.only_info:
-            return
 
         if not self.cmd_owner:
             return
@@ -924,7 +938,7 @@ Fund reduction:\t\t%s" %
         Show user info
         """
 
-        if self.show_full_list:
+        if not self.show_info:
             return
 
         if not self.cmd_owner:
