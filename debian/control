@@ -6,7 +6,7 @@ Build-Depends: debhelper
 Standards-Version: 3.8.4
  
 Package: walltime-extender
-Depends: python3, python3-pip, python3-dev, postgresql
+Depends: python3, python3-psycopg2, python3-dev, postgresql
 Section: utils
 Architecture: all
 Description: Walltime extender

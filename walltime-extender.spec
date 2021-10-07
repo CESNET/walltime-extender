@@ -4,7 +4,7 @@ Release: 5
 Summary: walltime-extender
 BuildRequires: python3
 Requires: python3
-Requires: python3-pip
+Requires: python3-psycopg2
 Requires: python3-devel
 Requires: postgresql
 Requires: postgresql-server
@@ -35,7 +35,6 @@ install -D -m 644 walltime-extender.remctl %{buildroot}/etc/remctl/conf.d/wallti
 
 %post
 %systemd_post walltime-extender.service
-pip3 install psycopg2
 if [ ! -d /opt/pbs/var/postgresql/walltime-extender ] ; then
     mkdir -p /opt/pbs/var/postgresql
     chown postgres:postgres /opt/pbs/var/postgresql/ -R
