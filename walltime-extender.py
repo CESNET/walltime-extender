@@ -361,16 +361,19 @@ class Walltime_extender(object):
         self.admin_re = r'NOTHING'
         self.list_re = r'.*'
 
+        self.preparsed_fund = ""
+        self.preparsed_count = ""
+
         cfg = config(section="general")
 
         if "clean_secs" in cfg.keys():
             self.clean_secs = self.human2sec(cfg["clean_secs"])
 
         if "fund" in cfg.keys():
-            self.fund = self.human2sec(cfg["fund"])
+            self.preparsed_fund = cfg["fund"]
 
         if "count" in cfg.keys():
-            self.count = int(cfg["count"])
+            self.preparsed_count = cfg["count"]
 
         if "owner_re" in cfg.keys():
             self.owner_re = r'%r' % cfg["owner_re"]
@@ -394,6 +397,34 @@ class Walltime_extender(object):
             logMsg(ERROR, "Illegal format of REMOTE_USER.")
             self.print_help()
             return
+
+        for r in self.preparsed_fund.split(","):
+            rule = r.split(":")
+            if len(rule) != 2:
+                continue
+            [rule_re, rule_value] = rule
+            rule_re = rule_re.strip()
+            rule_value = rule_value.strip()
+            rule_re = r'%r' % rule_re
+            rule_re = rule_re[1:-1]
+
+            if re.match(rule_re, self.cmd_owner):
+                self.fund = int(rule_value)
+                break
+
+        for r in self.preparsed_count.split(","):
+            rule = r.split(":")
+            if len(rule) != 2:
+                continue
+            [rule_re, rule_value] = rule
+            rule_re = rule_re.strip()
+            rule_value = rule_value.strip()
+            rule_re = r'%r' % rule_re
+            rule_re = rule_re[1:-1]
+
+            if re.match(rule_re, self.cmd_owner):
+                self.count = self.human2sec(rule_value)
+                break
 
         if len(self.admin_re) > 0 and re.match(self.admin_re, self.cmd_owner):
             print("You are the admin. Your cputime fund will not be affected.")
@@ -919,8 +950,10 @@ Fund reduction:\t\t%s" %
 
             full_list = {}
             full_list["clean_secs"] = self.clean_secs
-            full_list["cputime_fund"] = self.fund
-            full_list["count_limit"] = self.count
+            if self.preparsed_fund:
+                full_list["cputime_fund_rules"] = self.preparsed_fund
+            if self.preparsed_count:
+                full_list["count_limit_rules"] = self.preparsed_count
             full_list["list"] = {}
             for item in self.db.get_full_list():
                 earliest_timeout = self.db.get_earliest_record_timeout(
