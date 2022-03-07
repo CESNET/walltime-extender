@@ -346,6 +346,7 @@ class Walltime_extender(object):
         self.current_walltime = 0
         self.new_walltime = 0
         self.admin = False
+        self.force = False
         self.affect_fund = True
         self.db = None
 
@@ -430,6 +431,13 @@ class Walltime_extender(object):
             print("You are the admin. Your cputime fund will not be affected.")
             self.admin = True
             self.affect_fund = False
+
+        if "-f" in sys.argv:
+            sys.argv.remove("-f")
+            if self.admin:
+                self.force = True
+            else:
+                print("You need to be the admin to use '-f' parameter.")
 
         if len(argv) == 2 and sys.argv[1] == 'info':
             self.show_info = True
@@ -743,6 +751,82 @@ class Walltime_extender(object):
 
         return self.check_job()
 
+    def check_node_reservation(self, job_info, node_info):
+        """
+        Check node reservation violation.
+        """
+
+        if "queue" in node_info.keys():
+            if node_info["queue"] == "maintenance":
+                return False
+
+            if node_info["queue"] == "reserved":
+                return False
+
+        if "resv" in node_info.keys():
+            resvs = node_info["resv"].split(", ")
+            for resv in resvs:
+                try:
+                    resv_info = pbs_ifl.pbs_statresv(self.c, resv, None, None)
+                except:
+                    logMsg(ERROR, "Failed to get reservation info.")
+                    return False
+
+                if len(resv_info) != 1:
+                    logMsg(ERROR, "Reservation %s not found." % resv)
+                    return False
+
+                resv_info = resv_info[0]
+
+                if not "stime" in job_info.keys():
+                    logMsg(ERROR, "Job %s misses start time. \
+Please, contact support." % self.jobid)
+
+                    return False
+
+                if "reserve_start" in resv_info.keys():
+                    end_time = int(job_info["stime"])
+                    end_time += self.current_walltime
+                    end_time += self.additional_walltime
+
+                    if end_time > int(resv_info["reserve_start"]):
+                        logMsg(INFO, "Reservation %s in conflict." % resv)
+                        return False
+        return True
+
+    def check_reservations(self, job_info):
+        """
+        Check nodes reservations violation.
+        """
+
+        if job_info["job_state"] != "R":
+            return True
+
+        nodes = set()
+
+        exec_host = job_info['exec_host']
+        for host in exec_host.split("+"):
+            host = host.split("/")[0]
+            nodes.add(host)
+
+        for node in nodes:
+            try:
+                node_info = pbs_ifl.pbs_statvnode(self.c, node, None, None)
+            except:
+                logMsg(ERROR, "Failed to get node info.")
+                return False
+
+            if len(node_info) != 1:
+                logMsg(ERROR, "Node %s not found." % node)
+                return False
+
+            node_info = node_info[0]
+
+            if not self.check_node_reservation(job_info, node_info):
+                return False
+
+        return True
+
     def check_job(self):
         """
         Check job is suitable for walltime extension
@@ -849,6 +933,15 @@ cputime fund{bcolors.ENDC}." % self.cmd_owner)
 
             logMsg(INFO, f"Requested walltime {bcolors.FAIL}violates \
 queue limit{bcolors.ENDC}.")
+
+            return False
+
+        if not self.force and \
+            not self.check_reservations(job_info):
+            logMsg(INFO, f"Requested walltime {bcolors.FAIL}violates \
+node reservation{bcolors.ENDC}. Please, contact support.")
+
+            logMsg(INFO, "Admins can bypass this check by '-f' parameter.")
 
             return False
 
