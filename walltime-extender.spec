@@ -1,6 +1,6 @@
 Name:    walltime-extender
 Version: 1.0
-Release: 6
+Release: 7
 Summary: walltime-extender
 BuildRequires: python3
 Requires: python3
