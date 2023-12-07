@@ -1,47 +1,47 @@
-walltime-extender (1.0-7) unstable; urgency=low
+openpbs-walltime-extender (1.0-7+deb12) unstable; urgency=low
 
   * check nodes reservations violation
 
  -- Václav Chlumský, CESNET. <vchlumsky@cesnet.cz>  Mon, 7 Mar 2022 11:30:00 +0100
 
-walltime-extender (1.0-6) unstable; urgency=low
+openpbs-walltime-extender (1.0-6) unstable; urgency=low
 
   * per user customizable parameters
 
  -- Václav Chlumský, CESNET. <vchlumsky@cesnet.cz>  Tue, 12 Jan 2022 11:30:00 +0100
 
-walltime-extender (1.0-5) unstable; urgency=low
+openpbs-walltime-extender (1.0-5) unstable; urgency=low
 
   * add reset possibility for admins
 
  -- Václav Chlumský, CESNET. <vchlumsky@cesnet.cz>  Tue, 27 Jul 2021 11:30:00 +0100
 
-walltime-extender (1.0-4) unstable; urgency=low
+openpbs-walltime-extender (1.0-4) unstable; urgency=low
 
   * pbs_ifl: change PyString_AsString to PyBytes_AS_STRING
 
  -- Václav Chlumský, CESNET. <vchlumsky@cesnet.cz>  Fri, 16 Jul 2021 11:30:00 +0100
 
-walltime-extender (1.0-3) unstable; urgency=low
+openpbs-walltime-extender (1.0-3) unstable; urgency=low
 
   * respect max walltime on queue for queued jobs
   * list earliest record timeout
 
  -- Václav Chlumský, CESNET. <vchlumsky@cesnet.cz>  Fri, 16 Jul 2021 11:30:00 +0100
 
-walltime-extender (1.0-2) unstable; urgency=low
+openpbs-walltime-extender (1.0-2) unstable; urgency=low
 
   * add list command
 
  -- Václav Chlumský, CESNET. <vchlumsky@cesnet.cz>  Thu, 15 Jul 2021 11:30:00 +0100
 
-walltime-extender (1.0-1) unstable; urgency=low
+openpbs-walltime-extender (1.0-1) unstable; urgency=low
 
   * fix zero walltime and exec_vnode error for not running jobs
 
  -- Václav Chlumský, CESNET. <vchlumsky@cesnet.cz>  Wed, 14 Jul 2021 11:30:00 +0100
 
-walltime-extender (1.0-0) unstable; urgency=low
+openpbs-walltime-extender (1.0-0) unstable; urgency=low
 
   * initial version
 

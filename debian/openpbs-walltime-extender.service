@@ -1,0 +1,13 @@
+[Unit]
+Description=openpbs-walltime-extender
+
+[Service]
+Type=forking
+ExecStart=POSTGRESQL_PATH_HERE/pg_ctl -D /opt/pbs/var/postgresql/openpbs-walltime-extender/ -o '-p 5455' start -w
+ExecStop=POSTGRESQL_PATH_HERE/pg_ctl -D /opt/pbs/var/postgresql/openpbs-walltime-extender/ stop -w
+User=postgres
+Group=postgres
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

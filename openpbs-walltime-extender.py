@@ -21,7 +21,7 @@ except:
     import psycopg2
 
 
-def config(filename="/opt/pbs/etc/walltime-extender.conf",
+def config(filename="/opt/pbs/etc/openpbs-walltime-extender.conf",
            section=""):
 
     parser = ConfigParser()
@@ -39,7 +39,7 @@ def config(filename="/opt/pbs/etc/walltime-extender.conf",
     return c
 
 
-TOOL_NAME = "walltime-extender"
+TOOL_NAME = "openpbs-walltime-extender"
 FORMAT = "%(asctime)-15s %(ip)s %(user)-8s %(levelname)s %(message)s"
 INFO = 0
 WARNING = 1

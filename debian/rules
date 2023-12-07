@@ -7,31 +7,31 @@ POSTGRESQL_PATH := $(shell $(CURDIR)/detect_postgresql.sh)
 
 override_dh_auto_install:
 	# backup and edit servicefile
-	cp $(CURDIR)/debian/walltime-extender.service $(CURDIR)/debian/walltime-extender.service.backup
-	sed -i "s/POSTGRESQL_PATH_HERE/$(POSTGRESQL_PATH)/g" $(CURDIR)/debian/walltime-extender.service
+	cp $(CURDIR)/debian/openpbs-walltime-extender.service $(CURDIR)/debian/openpbs-walltime-extender.service.backup
+	sed -i "s/POSTGRESQL_PATH_HERE/$(POSTGRESQL_PATH)/g" $(CURDIR)/debian/openpbs-walltime-extender.service
 
-	mkdir -p $(CURDIR)/debian/walltime-extender/opt/pbs/etc
-	mkdir -p $(CURDIR)/debian/walltime-extender/opt/pbs/bin
-	mkdir -p $(CURDIR)/debian/walltime-extender/opt/pbs/lib/python3-pbs_ifl
-	mkdir -p $(CURDIR)/debian/walltime-extender/etc/remctl/conf.d
-	mkdir -p $(CURDIR)/debian/walltime-extender/opt/pbs/var/postgresql
-	cp $(CURDIR)/walltime-extender.conf $(CURDIR)/debian/walltime-extender/opt/pbs/etc/
-	cp $(CURDIR)/walltime-extender.py $(CURDIR)/debian/walltime-extender/opt/pbs/bin/
-	cp $(CURDIR)/walltime-extender $(CURDIR)/debian/walltime-extender/opt/pbs/bin/
-	cp $(CURDIR)/pbs_ifl.py $(CURDIR)/debian/walltime-extender/opt/pbs/lib/python3-pbs_ifl/
-	cp $(CURDIR)/_pbs_ifl.so $(CURDIR)/debian/walltime-extender/opt/pbs/lib/python3-pbs_ifl/
-	cp $(CURDIR)/walltime-extender.remctl $(CURDIR)/debian/walltime-extender/etc/remctl/conf.d/walltime-extender
+	mkdir -p $(CURDIR)/debian/openpbs-walltime-extender/opt/pbs/etc
+	mkdir -p $(CURDIR)/debian/openpbs-walltime-extender/opt/pbs/bin
+	mkdir -p $(CURDIR)/debian/openpbs-walltime-extender/opt/pbs/lib/python3-pbs_ifl
+	mkdir -p $(CURDIR)/debian/openpbs-walltime-extender/etc/remctl/conf.d
+	mkdir -p $(CURDIR)/debian/openpbs-walltime-extender/opt/pbs/var/postgresql
+	cp $(CURDIR)/openpbs-walltime-extender.conf $(CURDIR)/debian/openpbs-walltime-extender/opt/pbs/etc/
+	cp $(CURDIR)/openpbs-walltime-extender.py $(CURDIR)/debian/openpbs-walltime-extender/opt/pbs/bin/
+	cp $(CURDIR)/openpbs-walltime-extender $(CURDIR)/debian/openpbs-walltime-extender/opt/pbs/bin/
+	cp $(CURDIR)/pbs_ifl.py $(CURDIR)/debian/openpbs-walltime-extender/opt/pbs/lib/python3-pbs_ifl/
+	cp $(CURDIR)/_pbs_ifl.so $(CURDIR)/debian/openpbs-walltime-extender/opt/pbs/lib/python3-pbs_ifl/
+	cp $(CURDIR)/openpbs-walltime-extender.remctl $(CURDIR)/debian/openpbs-walltime-extender/etc/remctl/conf.d/openpbs-walltime-extender
 	dh_auto_install
 	dh_systemd_enable || true
 	dh_systemd_start || true
 
 override_dh_installdeb:
 	dh_installdeb
-	sed -i '/remctl/d' $(CURDIR)/debian/walltime-extender/DEBIAN/conffiles
-	sed -i "s/POSTGRESQL_PATH_HERE/$(POSTGRESQL_PATH)/g" $(CURDIR)/debian/walltime-extender/DEBIAN/postinst
+	sed -i '/remctl/d' $(CURDIR)/debian/openpbs-walltime-extender/DEBIAN/conffiles
+	sed -i "s/POSTGRESQL_PATH_HERE/$(POSTGRESQL_PATH)/g" $(CURDIR)/debian/openpbs-walltime-extender/DEBIAN/postinst
 
 	# recover servicefile
-	mv $(CURDIR)/debian/walltime-extender.service.backup $(CURDIR)/debian/walltime-extender.service
+	mv $(CURDIR)/debian/openpbs-walltime-extender.service.backup $(CURDIR)/debian/openpbs-walltime-extender.service
 
 clean:
 	dh_testdir

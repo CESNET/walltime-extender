@@ -1,12 +1,12 @@
-Source: walltime-extender
+Source: openpbs-walltime-extender
 Section: unknown
 Priority: optional
 Maintainer: Václav Chlumský <vchlumsky@cesnet.cz>
 Build-Depends: debhelper
 Standards-Version: 3.8.4
  
-Package: walltime-extender
-Depends: python3, python3-psycopg2, python3-dev, postgresql
+Package: openpbs-walltime-extender
+Depends: python3, python3-psycopg2, python3-dev, postgresql, postgresql-common
 Section: utils
 Architecture: all
-Description: Walltime extender
+Description: Walltime extender for OpenPBS

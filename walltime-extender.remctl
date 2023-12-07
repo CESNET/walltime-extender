@@ -1,1 +1,0 @@
-pbs-extend ALL /opt/pbs/bin/walltime-extender ANYUSER
