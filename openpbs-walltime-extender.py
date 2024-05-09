@@ -354,6 +354,7 @@ class Walltime_extender(object):
         self.show_info = False
         self.show_full_list = False
         self.reset_owner = None
+        self.info_owner = None
 
         self.clean_secs = 2592000
         self.fund = 10368000
@@ -441,8 +442,27 @@ class Walltime_extender(object):
 
         if len(argv) == 2 and sys.argv[1] == 'info':
             self.show_info = True
+        elif len(argv) == 3 and sys.argv[1] == 'info':
+            if len(sys.argv[2]) > 0:
+                if self.cmd_owner == sys.argv[2]:
+                    self.show_info = True
+                else:
+                    if not self.admin:
+                        logMsg(ERROR, "You are not allowed to show others info.")
+                        self.print_help()
+                        return
+                    self.info_owner = sys.argv[2]
+                self.show_info = True
+            else:
+                self.print_help()
+                return
         elif len(argv) == 2 and sys.argv[1] == 'list':
-            self.show_full_list = True
+            if not self.admin:
+                logMsg(ERROR, "You are not allowed to show full list.")
+                self.print_help()
+                return
+            if self.admin:
+                self.show_full_list = True
         elif len(argv) == 3 and sys.argv[1] == 'reset':
             if not self.admin:
                 logMsg(ERROR, "You are not allowed to reset fund.")
@@ -945,8 +965,6 @@ node reservation{bcolors.ENDC}. Please, contact support.")
 
             return False
 
-        self.show_info = True
-
         return True
 
     def create_walltime_attr(self, walltime):
@@ -990,6 +1008,7 @@ node reservation{bcolors.ENDC}. Please, contact support.")
         reduction = 0
         if self.affect_fund:
             reduction = self.additional_walltime * self.ncpus
+            self.show_info = True
 
         logMsg(INFO, f"The walltime of the job %s {bcolors.OKGREEN}\
 has been extended{bcolors.ENDC}.\n\
@@ -1019,6 +1038,7 @@ Fund reduction:\t\t%s" %
 
         self.db.clean_owner(self.reset_owner)
 
+        self.info_owner = self.reset_owner
         self.show_info = True
 
         return
@@ -1071,10 +1091,16 @@ Fund reduction:\t\t%s" %
             return
 
         owner = self.cmd_owner
-        if (self.reset_owner):
-            owner = self.reset_owner
 
-        if self.affect_fund and self.db.is_connected():
+        if self.info_owner:
+            owner = self.info_owner
+
+        if not re.match(self.owner_re, owner):
+            logMsg(ERROR, "Illegal format of principal.")
+            self.print_help()
+            return
+
+        if self.db.is_connected():
             days = int(self.clean_secs / 86400)
             used_count = self.db.get_used_count(owner)
             used_fund = self.db.get_used_fund(owner)
