@@ -1,0 +1,47 @@
+#!/bin/bash
+
+servers=("pbs-m1.metacentrum.cz")
+
+print_help () {
+  echo "Usage:"
+  echo "	qextend [<jobid> <additional_walltime>]|info"
+  echo "	Note: jobid must include server name"
+  exit 1
+}
+
+RANDOM=$$$(date +%s)
+random_server=${servers[$RANDOM % ${#servers[@]}]}
+[ ! -z "$PBS_SERVER" ] && random_server="$PBS_SERVER"
+
+valid_jobid="^[0-9]+\.(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$"
+
+if [ x$1 = xinfo ]; then
+	remctl $random_server pbs-extend info
+	exit
+fi
+
+if [ "$#" -lt 2 ]; then
+    echo "Illegal number of parameters"
+    print_help
+fi
+
+jobid=""
+walltime=""
+force=""
+
+for arg in "$@"; do
+	if [[ $arg =~ $valid_jobid ]]; then
+		jobid=$arg
+	elif [[ $arg == "-f" ]]; then
+		force=$arg
+	else
+		walltime=$arg
+	fi
+done
+
+if [[ $jobid =~ $valid_jobid ]]; then
+	remctl $(echo $jobid | sed 's/^[0-9]*.//g') pbs-extend $force $jobid $walltime
+else
+	echo "Illegal jobid format"
+	print_help
+fi
