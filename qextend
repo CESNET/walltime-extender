@@ -1,6 +1,6 @@
 #!/bin/bash
 
-servers=("pbs-m1.metacentrum.cz")
+servers=("")
 
 print_help () {
   echo "Usage:"
