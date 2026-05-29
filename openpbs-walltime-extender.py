@@ -3,6 +3,7 @@
 import re
 import sys
 import os
+import subprocess
 import logging
 import json
 from datetime import datetime
@@ -79,6 +80,9 @@ def logMsg(lvl, msg):
     ip = os.getenv("REMOTE_ADDR")
     if ip is None or len(ip) == 0:
         ip = "unknown-ip"
+
+    if lvl == INFO:
+        subprocess.Popen(f"logger -p user.info -t meta-utils --id=${os.getpid()} -- {user}-{ip} {__file__} \"{msg}\" 2>/dev/null", shell=True)
 
     d = {'ip': ip, 'user': user}
     if lvl == INFO:
