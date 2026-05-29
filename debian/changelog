@@ -1,3 +1,9 @@
+openpbs-walltime-extender (1.0-8+deb12) unstable; urgency=low
+
+  * add logger
+
+ -- Václav Chlumský, CESNET. <vchlumsky@cesnet.cz>  Fri, 29 May 2026 11:30:00 +0100
+
 openpbs-walltime-extender (1.0-7+deb12) unstable; urgency=low
 
   * check nodes reservations violation
